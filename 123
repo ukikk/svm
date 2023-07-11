@@ -1,0 +1,220 @@
+library(ggplot2)
+library(e1071)
+
+
+plot(iris)
+
+plot(iris$Sepal.Length, iris$Sepal.Width, col=iris$Species)
+plot(iris$Petal.Length, iris$Petal.Width, col=iris$Species)
+
+s<-sample(150, 100)
+col<-c("Petal.Length", "Petal.Width", "Species")
+iris_train<-iris[s,col]
+iris_test<-iris[-s,col]
+
+svmfit <- svm(Species ~., data = iris_train, kernel = "linear", cost = .1, scale = FALSE)
+print(svmfit)
+plot(svmfit, iris_train[,col])
+table(p, iris_test[,3])
+mean(p== iris_test[,3])
+svmfit <- svm(Species ~., data = iris_train, kernel = "linear", cost = .1, scale = FALSE)
+print(svmfit)
+plot(svmfit, iris_train[,col])
+table(p, iris_test[,3])
+mean(p== iris_test[,3])
+
+tuned <- tune(svm, Species ~., data = iris_train, kernel = "linear", ranges = list(cost=c(0.001,0.01,.1,1,10,100)), scale = FALSE)
+# Will show the optimal cost parameter
+summary(tuned)
+
+p <- predict(svmfit, iris_test[,col], type="class")
+plot(p)
+
+table(p, iris_test[,3])
+mean(p== iris_test[,3])
+
+svmfit <- svm(Species ~., data = iris_train, kernel = "radial", cost = .1, gamma = 10)
+print(svmfit)
+plot(svmfit, iris_train[,col])
+table(p, iris_test[,3])
+mean(p== iris_test[,3])
+
+tuned <- tune(svm, Species ~., data = iris_train, kernel = "radial", ranges = list(gamma=seq(0.1,1,10),cost=c(0.001,0.01,.1,1,10,100)), scale = FALSE)
+# Will show the optimal cost parameter
+summary(tuned)
+
+svmfit <- svm(Species ~., data = iris_train, kernel = "radial", cost = 1, gamma = 0.1)
+print(svmfit)
+plot(svmfit, iris_train[,col])
+
+p <- predict(svmfit, iris_test[,col], type="class")
+plot(p)
+
+table(p, iris_test[,3])
+mean(p== iris_test[,3])
+
+
+# 安裝並加載scatterplot3d包
+install.packages("scatterplot3d")
+library(scatterplot3d)
+
+# 創建一個圓形數據集
+set.seed(42)
+n <- 100
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+z <- ifelse(sqrt(x^2 + y^2) < 0.5, 0, 1)
+
+# 將數據映射到三維空間
+z_coord <- sqrt(x^2 + y^2)
+
+# 創建一個三維散點圖
+scatterplot3d(x, y, z_coord, color = z+1, pch = 19, 
+              xlab = "X", ylab = "Y", zlab = "Z",
+              main = "3D Scatterplot of Circular Data")
+# 安裝並加載rgl包
+install.packages("rgl")
+library(rgl)
+
+# 創建一個圓形數據集
+set.seed(42)
+n <- 100
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+z <- ifelse(sqrt(x^2 + y^2) < 0.5, 1, 0)
+
+# 將數據映射到三維空間
+z_coord <- sqrt(x^2 + y^2)
+
+# 創建一個可以旋轉的三維散點圖
+plot3d(x, y, z_coord, col = z+1, size = 5)
+
+
+
+data(iris)
+
+#(2)畫散佈圖
+library(ggplot2)
+#花萼長寬分佈
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point(aes(color = Species))
+#花瓣長寬分佈
+ggplot(iris, aes(x = Petal.Length, y = Petal.Width)) + geom_point(aes(color = Species))
+#(3)切分訓練及測試樣本
+#設定亂數種子
+set.seed(1111)
+#樣本筆數
+n <- nrow(iris)
+#取出樣本數的idx
+t_idx <- sample(seq_len(n), size = round(0.8 * n))
+#訓練資料與測試資料比例: 80%建模，20%驗證
+traindata <- iris[t_idx,]
+testdata <- iris[ - t_idx,]
+
+svmM <- svm(Species ~ ., data = traindata, probability = TRUE)
+
+# 預測
+results <- predict(svmM, testdata, probability = TRUE)
+
+# 評估
+cm <- table(x = testdata$Species, y = results)
+cm
+SVMaccuracy <- sum(diag(cm)) / sum(cm)
+SVMaccuracy
+
+
+
+
+
+model <- svm(Species ~ ., data=traindata)
+summary(model)
+predicted.values <- predict(model,testdata)
+table(predicted.values,testdata$Species)
+#使用tune()來找到最適合的參數
+tune.results <- tune(svm,train.x=iris[1:4],train.y=iris[,5],kernel='radial',ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
+
+#找到cost=1及gamma=0.5為最適合參數
+summary(tune.results)
+
+#使用cost=1及gamma=0.5建立模型
+tuned.svm <- svm(Species ~ ., data=testdata, kernel="radial", cost=1, gamma=0.5)
+summary(tuned.svm)
+
+#看結果和沒有調整前是一樣的，有可能是資料太少造成的
+tuned.predicted.values <- predict(tuned.svm,testdata)
+table(tuned.predicted.values,testdata$Species)
+
+
+
+
+data(iris)
+ind <- sample(1:2, nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+train_data <- iris[ind==1,]
+test_data <- iris[ind==2,]
+str(train_data)
+str(test_data)
+data("iris")
+attach(iris)
+library(lattice)
+xyplot(Petal.Length ~ Petal.Width,data = iris,groups = Species,auto.key = list(corner = c(1,0)))
+subdata = iris[iris$Species != "virginica",]
+subdata$Species = factor(subdata$Species)
+model1 = svm(Species ~ Petal.Length + Petal.Width,data = subdata)
+summary(model1)
+plot(model1, subdata, Petal.Length ~ Petal.Width)
+model2 = svm(Species ~ .,data = iris)
+summary(model2)
+plot(model2, iris, Petal.Length ~ Petal.Width)
+x = iris[,-5]  # 除第五列以外数据作为特征变量
+y = iris[,5]   # 提取第5列数据做为结果变量
+model3 = svm(x,y,kernel = "radial", gamma = if(is.vector(x)) 1 else 1/ncol(x))
+str(model3)
+
+
+
+
+
+
+
+library(dplyr)
+data("iris")
+iris.subset<-subset(iris,select=c("Sepal.Length","Sepal.Width","Species"),Species%in%c("setosa","virginica"))
+plot(x=iris.subset$Sepal.Length,y=iris.subset$Sepal.Width,col=iris.subset$Species,pch=19)
+svm.model<-svm(Species~.,data = iris.subset,kernel="linear",cost=1,scale = F)
+points(iris.subset[svm.model$index,c(1,2)],col="blue",cex=2)
+w=t(svm.model$coefs)%*%svm.model$SV
+b=-svm.model$rho
+abline(a=-b/w[1,2],b=-w[1,1]/w[1,2],col="red",lty=5)
+plot(x=iris.subset$Sepal.Length,y=iris.subset$Sepal.Width,col=iris.subset$Species,pch=19)
+svm.model<-svm(Species~.,data = iris.subset,kernel="linear",cost=10,scale = F)
+points(iris.subset[svm.model$index,c(1,2)],col="blue",cex=2)
+w=t(svm.model$coefs)%*%svm.model$SV
+b=-svm.model$rho
+abline(a=-b/w[1,2],b=-w[1,1]/w[1,2],col="red",lty=5)
+plot(x=iris.subset$Sepal.Length,y=iris.subset$Sepal.Width,col=iris.subset$Species,pch=19)
+svm.model<-svm(Species~.,data = iris.subset,kernel="linear",cost=1000,scale = F,type='C-classification')
+points(iris.subset[svm.model$index,c(1,2)],col="blue",cex=2)
+w=t(svm.model$coefs)%*%svm.model$SV
+b=-svm.model$rho
+abline(a=-b/w[1,2],b=-w[1,1]/w[1,2],col="red",lty=5)
+
+
+
+
+
+set.seed(42)
+n <- 100
+x <- runif(n, -1, 1)
+y <- runif(n, -1, 1)
+z <- ifelse(x > 0, 1, -1)  # 線性可分的點
+z[abs(y) < 0.2] <- -z[abs(y) < 0.2]  # 線性不可分的點
+data <- data.frame(x = x, y = y, z = as.factor(z))
+# 硬間隔模型（C很大）
+model_hard <- svm(z ~ ., data = data, kernel = "linear", cost = 1000)
+
+# 軟間隔模型（C很小）
+model_soft <- svm(z ~ ., data = data, kernel = "linear", cost = 0.1)
+# 繪製硬間隔模型
+plot(model_hard, data)
+
+# 繪製軟間隔模型
+plot(model_soft, data)
